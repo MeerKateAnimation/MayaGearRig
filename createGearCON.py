@@ -1,15 +1,19 @@
+''' TO DO:
+Delete construction history on controller
+proof it to work even if intended names are already taken (can assign all the shapes a variable upon creation)
+'''
+
 #define names (might not work as intended if not in an empty scene)
 circles = ['innCircleLf', 'outCircleLf', 'innCircleRt', 'outCircleRt']
 arrows = ['arrowLf', 'arrowRt', 'arrowUp', 'arrowDn']
 
-#create arrow component
+#create arrow components
 cmds.circle(n = circles[0], c = (0, 0, 0), nr = (0, 1, 0), r = 1.35, sw = 90)
 cmds.circle(n = circles[1], c = (0, 0, 0), nr = (0, 1, 0), r = 1.65, sw = 90)
 cmds.circle(n = circles[2], c = (0, 0, 0), nr = (0, 1, 0), r = 1.35, sw = 90)
 cmds.rotate(0, 180, 0, circles[2])
 cmds.circle(n = circles[3], c = (0, 0, 0), nr = (0, 1, 0), r = 1.65, sw = 90)
 cmds.rotate(0, 180, 0, circles[3])
-
 
 cmds.curve(n = arrows[0], p=[(0.15, 0, 0), (0.4, 0, -0.04), (0.55, 0, -0.0625),  (0.48, 0, 0.1), (0.1, 0, 0.45), (0, 0, .5), (-0.1, 0, 0.45), (-0.48, 0, 0.1), (-0.55, 0, -0.0625), (-0.4, 0, -0.04), (-0.15, 0, 0)])
 cmds.move (-1.5, 0, 0, arrows[0])
