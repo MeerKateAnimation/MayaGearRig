@@ -3,9 +3,22 @@ create dictuanry with each gear and it's position
 add ability to select desired gears beforehand
 delete construction history on gearOffset
 rotate stuff so the front is the front view
-maybe I should convert some of this stuff to functions (create nodes, connect nodes
+maybe I should convert some of this stuff to functions (create nodes, connect nodes)
+maybe parent the main gear group to gear offset and pull the offset con out of hiarchy for easier animator use?
+What does it do if there's only 1 gear? What do I want it to do?
+Add a variable to change scale of controls
+should get rotation and scale(?) of gears too
+
 '''
 
+def introduction():
+    '''
+    print('-----------------------------------------------')
+    print('\nWelcome to my gear rig!\n')
+    print('this rig and script is written by Emily Broyles')
+    print('meerkate.com\n')
+    '''
+    print('-----------------------------------------------')
 
 def createCon(): # function that creates the control(replace later with arrow control)
     print('Creating gear control...')
@@ -16,11 +29,46 @@ def createCon(): # function that creates the control(replace later with arrow co
     print('Control created\n')
     return conOutput
 
+''' set up '''
 
-gearAmount = 2
+introduction()
+
+gearAmount = 2 #sets default gear amount if nothing is selected
+tempGearOffsetDistance = 2.0
+tempGearOffset = 0.0
 print(gearAmount)
 print(gearAmount - 1)
 gearPlacement = 0.0
+
+gearGeo = cmds.ls(sl = True)
+print(gearGeo)
+#cmds.select(cl = True)
+#cmds.select(gearGeo[1])
+gearPos = {}
+
+if gearGeo == []:
+    print('Nothing is selected - creating temporary meshes in place of gears')
+    for i in range(gearAmount):
+        print(i)
+        gear = (cmds.polyCylinder(n = 'tempGear{}'.format(i + 1), h = 0.25, ax = (1, 0, 0), ch = False))
+        gearGeo.append(gear[0])
+        print(gearGeo)
+        print(gear[0])
+        gearPos[gearGeo[i]] = [0.0, 0.0, tempGearOffset]
+        tempGearOffset = tempGearOffset + tempGearOffsetDistance
+        print(gearPos)
+else:
+    gearAmount = len(gearGeo)
+    print(gearAmount)
+    print('Saving positions of selected gears')
+    for j in range(gearAmount):
+        pos = cmds.xform(gearGeo[j], q = True, t = True, ws= True)
+        print(pos)
+        print(j)
+        gearPos[gearGeo[j]] = pos
+        print (gearPos)
+        
+
 
 #create control for gears
 rotInput = createCon()
@@ -28,7 +76,9 @@ rotInput = createCon()
 for x in range(1, gearAmount + 1): 
     
     #create hiarchy
-    cmds.polyCylinder(n = 'tempGear{}'.format(x), h = 0.25, ax = (1, 0, 0))
+#    cmds.polyCylinder(n = 'tempGear{}'.format(x), h = 0.25, ax = (1, 0, 0))
+    #select gear
+    cmds.select(gearGeo[x-1])
     geoGrp = cmds.group(n = 'geoGrp{}'.format(x))
     rotGrp = cmds.group(n = 'rotGrp{}'.format(x))
     gearOffset = cmds.circle(n = 'gearOffset{}'.format(x), d = 1, s = 4, nr = (1, 0, 0), cx = 1) #saves as a list. to access the con use gearOffset[0]
@@ -70,15 +120,17 @@ for x in range(1, gearAmount + 1):
     cmds.connectAttr('{}.outputX'.format(rotInput), '{}.rotateX'.format(rotGrp))
 
     cmds.connectAttr('{}.outputX'.format(cogConversion), '{}.input2X'.format(rotCalc))
+    #connect gearOffset pos neg to condition
+    cmds.connectAttr('{}.posNeg'.format(gearOffset[0]), '{}.firstTerm'.format(invert))
+
 
     if x != 1:
         print(str(x) + ' does not = 1')
-    #connect last loop nodes to current loop nodes
-    #if statement to bypass first loop?
-    #connect offset2 cogs to lastCogConversion
+        #connect last loop nodes to current loop nodes
+        cmds.connectAttr('{}.gearCogs'.format(gearOffset[0]), '{}.input2X'.format(lastCogConversion))
     
     #needs next loop's nodes
-    #connect gearOffset pos neg to condition
+    
     #connect gearOffset2 Gear Cogs to CogConversion1 input2 x not made in this loop yet
 
     
@@ -100,19 +152,3 @@ for x in range(1, gearAmount + 1):
 
 # connect CON rotx to rotGrp1 rotx
 
-'''
-gearNumber = 10
-lastGearNumber = gearNumber - 1
-gearName = "gearCogConversion" + str(gearNumber)
-print(gearName)
-
-gearConversion = cmds.createNode('multiplyDivide', n = ("gearCogConversion" + str(gearNumber)))
-rotCalc = cmds.createNode('multiplyDivide', n = ("rotationCalculation" + str(gearNumber)))
-cmds.createNode('multiplyDivide', n = ("inverseMultiply" + str(gearNumber)))
-cmds.createNode('condition', n = ("posNegCondition" + str(gearNumber)))
-
-testAttrA = gearCogConversion10.outputX
-
-cmds.connectAttr(gearCogConversion10.outputX, rotationCalculation10.input2X)
-
-'''
