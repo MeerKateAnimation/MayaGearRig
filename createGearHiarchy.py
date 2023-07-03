@@ -8,6 +8,8 @@ maybe parent the main gear group to gear offset and pull the offset con out of h
 What does it do if there's only 1 gear? What do I want it to do?
 Add a variable to change scale of controls
 should get rotation and scale(?) of gears too
+should lock pos neg and maybe even hide it?
+if UI popups are an option then make the temp gears number pop up as a prompt
 
 '''
 
@@ -23,8 +25,9 @@ def introduction():
 def createCon(): # function that creates the control(replace later with arrow control)
     print('Creating gear control...')
     con = cmds.circle(n = 'gear_CON', d = 3, s = 8, nr = (1, 0, 0), cx = 1, r = 1.5, ch = False)
+    cmds.select(con, r = True)
+    cmds.addAttr(ln = 'rotMult', at = 'float', dv = 1, h = False, k = True)
     conOutput = cmds.createNode('multiplyDivide', n = ("conMultiplier"))
-    #add attribute for a multiplication factor
     cmds.connectAttr('gear_CON.rotateX', '{}.input1X'.format(conOutput))
     print('Control created\n')
     return conOutput
@@ -77,6 +80,7 @@ for x in range(1, gearAmount + 1):
     
     #create hiarchy
 #    cmds.polyCylinder(n = 'tempGear{}'.format(x), h = 0.25, ax = (1, 0, 0))
+    cmds.xform(gearGeo[x-1], t = (0.0, 0.0, 0.0), ws = True)
     #select gear
     cmds.select(gearGeo[x-1])
     geoGrp = cmds.group(n = 'geoGrp{}'.format(x))
@@ -133,6 +137,9 @@ for x in range(1, gearAmount + 1):
     
     #connect gearOffset2 Gear Cogs to CogConversion1 input2 x not made in this loop yet
 
+    #position offset
+    print(gearPos[gearGeo[x-1]])
+    cmds.xform(gearOffset[0], t = gearPos[gearGeo[x-1]], ws = True)
     
     #relabel stuff
     lastCogConversion = cogConversion
