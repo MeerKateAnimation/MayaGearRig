@@ -91,7 +91,7 @@ for x in range(1, gearAmount + 1):
     print("Don't know why the previous error shows up... - Emily \n")
     
     cmds.addAttr(gearOffset, at = 'long', longName = 'gearCogs', defaultValue = 10, minValue = 2, h = False, k = True)
-    cmds.addAttr(gearOffset, at = 'enum', longName = 'posNeg', defaultValue = (x % 2), en = 'Pos:Neg', h = False, k = True)
+    #cmds.addAttr(gearOffset, at = 'enum', longName = 'posNeg', defaultValue = (x % 2), en = 'Pos:Neg', h = False, k = True) #prob not needed
     
     
     ''' create nodes '''
@@ -102,13 +102,16 @@ for x in range(1, gearAmount + 1):
     # create node to calculate rotation
     rotCalc = cmds.createNode('multiplyDivide', n = ("rotationCalculation{}".format(x)))
     
+    ''' don't need condition node...
+
     # create condition node to determine if direction needs to be inverted
     invert = cmds.createNode('condition', n = ('invert{}'.format(x)))
     cmds.setAttr('{}.colorIfTrueR'.format(invert), 1)
-    cmds.setAttr('{}.colorIfFalseR'.format(invert), -1)
+    cmds.setAttr('{}.colorIfFalseR'.format(invert), -1)'''
     
     # create node to invert direction
     rotInvert = cmds.createNode('multiplyDivide', n = ('rotInvert{}'.format(x)))
+    cmds.setAttr('{}.input2X'.format(rotInvert), -1)
 
     """connect attrs"""
 
@@ -119,13 +122,15 @@ for x in range(1, gearAmount + 1):
 
     
     cmds.connectAttr('{}.outputX'.format(rotCalc), '{}.input1X'.format(rotInvert))
-    cmds.connectAttr('{}.outColorR'.format(invert), '{}.input2X'.format(rotInvert))
+    #cmds.connectAttr('{}.outColorR'.format(invert), '{}.input2X'.format(rotInvert))
+    
     #connect inverseMultiply to last rotGrp
     cmds.connectAttr('{}.outputX'.format(rotInput), '{}.rotateX'.format(rotGrp))
 
     cmds.connectAttr('{}.outputX'.format(cogConversion), '{}.input2X'.format(rotCalc))
+    '''delete if deleting condition node
     #connect gearOffset pos neg to condition
-    cmds.connectAttr('{}.posNeg'.format(gearOffset[0]), '{}.firstTerm'.format(invert))
+    cmds.connectAttr('{}.posNeg'.format(gearOffset[0]), '{}.firstTerm'.format(invert))'''
 
 
     if x != 1:
