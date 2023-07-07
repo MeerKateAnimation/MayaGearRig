@@ -22,7 +22,7 @@ change color of cons! (with variables to easily change later)
 changeable attributes (some only apply if nothing is selected)
 ---------------------------------------------------------- '''
 # These attributes affect the size of the controls
-conSizeMain = 1 # changes the size of the main rotation control (currently does nothing)
+conSizeRot = 4 # changes the size of the main rotation control (currently does nothing)
 conSizeOffset = 1.5 # changes the size of the offset control
 controlFollowsGear = True # determines if gear spin control follows first gear offset control
 
@@ -109,8 +109,9 @@ def createCon(): # function that creates the control
         cmds.select(each, add = True)
     cmds.delete()
     
-    # rotate control and freeze transformations
-    cmds.xform(con, ro = (0, 0, 90), t = (1,0,0))
+    # transform control and freeze transformations
+    conScale = conSizeRot / 4
+    cmds.xform(con, ro = (0, 0, 90), t = (1,0,0), s = (conScale, conScale, conScale))
     cmds.makeIdentity(con, a = True, t = True, r = True, s = True, n = False)
 
     # add attributes to control
@@ -130,6 +131,7 @@ gearGeo = cmds.ls(sl = True)
 gearPos = {}
 gearRot = {}
 gearGrp = []
+
 # these groups are for organizing the outliner in the end
 controlGrp = []
 offsetGrp = []
