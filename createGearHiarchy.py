@@ -1,5 +1,5 @@
 ''' TO DO:
-rotate stuff so the front is the front view (should I change the rotation channel to z?)
+rotate stuff so the front is the front view 
 maybe parent the main gear group to gear offset and pull the offset con out of hiarchy for easier animator use?
 What does it do if there's only 1 gear? What do I want it to do?
 Add a variable to change scale of controls
@@ -10,10 +10,10 @@ make loops consistant (x+1 vs x)
 save each main group and parent them all into a single group
 currently breaks if you try and do it mutltiple times in same scene
 add attribute to change how far out from the gear the offset control is
-add attribute to change visible orientation??? 
 set control to go to first gear (or be moved by animator? but default is by first gear))
 if gears are zeroed out the offset control will not be in the right place. Gear rotation still works as intended
-maybe add an attribute to offset 'direction override' or something like that to reverse the direction if needed may be easier then rotating the offset by 180 degrees
+add attr to control offset control visibility
+lock attributes
 
 '''
 
@@ -22,7 +22,8 @@ changeable attributes (some only apply if nothing is selected)
 ---------------------------------------------------------- '''
 # These attributes affect the size of the controls
 conSizeMain = 1 # changes the size of the main rotation control (currently does nothing)
-conSizeOffset = 1.5 # changes the size in units of the offset control
+conSizeOffset = 1.5 # changes the size of the offset control
+controlFollowsGear = True # determines if gear spin control follows first gear offset control
 
 # These only apply if nothing is selected
 gearAmount = 10 # sets default gear amount if nothing is selected
@@ -51,15 +52,14 @@ def endMessage():
 def createCon(): # function that creates the control (replace later with arrow control)
     # creates the control
     print('Creating gear control')
-    con = cmds.circle(n = 'gear_CON', d = 3, s = 8, nr = (1, 0, 0), cx = 1, r = 1.5, ch = False)
-    grps = [con]
-    print(grps)
+    con = cmds.circle(n = 'gearRotate_CON', d = 3, s = 8, nr = (1, 0, 0), cx = 1, r = 1.5, ch = False)[0]
+
     # add attributes to control
     cmds.select(con, r = True)
     cmds.addAttr(ln = 'rotMult', at = 'float', dv = 1, h = False, k = True)
     conOutput = cmds.createNode('multiplyDivide', n = ("conMultiplier"))
-    cmds.connectAttr('gear_CON.rotateX', '{}.input1X'.format(conOutput))
-    return conOutput
+    cmds.connectAttr('gearRotate_CON.rotateX', '{}.input1X'.format(conOutput))
+    return [con, conOutput]
 
 introduction()
 
@@ -69,7 +69,12 @@ saves gear positions and creates gears if necessary
 gearGeo = cmds.ls(sl = True)
 gearPos = {}
 gearRot = {}
-#grps = []
+gearGrp = []
+# these groups are for organizing the outliner in the end
+controlGrp = []
+offsetGrp = []
+geometryGrp = []
+masterGrp = []
 
 if gearGeo == []:
     print('Nothing is selected - creating temporary meshes in place of gears')
@@ -96,11 +101,11 @@ else:
 creating the rig 
 '''
 # create control for gears
-rotInput = createCon()
-print(grps)
+createConOutput = createCon()
+rotInput = createConOutput[1]
+rotCon = createConOutput[0]
 
 # main loop for creating the gear rig
-print(gearGeo)
 for x in range(1, gearAmount + 1): 
     print('Setting up rig for gear ' + str(x))
     # center gear and create hiarchy
@@ -108,13 +113,13 @@ for x in range(1, gearAmount + 1):
     cmds.select(gearGeo[x-1])
     geoGrp = cmds.group(n = 'geoGrp{}'.format(x))
     rotGrp = cmds.group(n = 'rotGrp{}'.format(x))
-    gearOffset = cmds.circle(n = 'gearOffset{}'.format(x), r = (conSizeOffset / 2), d = 1, s = 4, nr = (1, 0, 0), cx = 1, ch = False)[0]
-    gearGrp = cmds.group(gearOffset, rotGrp, n = 'gear{}'.format(x))
-    grps.append(gearGrp)
-    cmds.parent(rotGrp, gearOffset)
+    gearGrp = cmds.group(rotGrp, n = 'gear{}'.format(x))
+    geometryGrp.append(gearGrp)
     
+    gearOffset = cmds.circle(n = 'gearOffset{}'.format(x), r = (conSizeOffset / 2), d = 1, s = 4, nr = (1, 0, 0), cx = 1, ch = False)[0]
     cmds.addAttr(gearOffset, at = 'long', longName = 'gearCogs', defaultValue = 10, minValue = 2, h = False, k = True)
     cmds.addAttr(gearOffset, at = 'bool', longName = 'directionOverride', defaultValue = False, h = False, k = True)
+    offsetGrp.append(gearOffset)
     
     # create node to calculate rotation ratio
     cogConversion = cmds.createNode('multiplyDivide', n = ("cogConversion{}".format(x)))
@@ -140,6 +145,8 @@ for x in range(1, gearAmount + 1):
     cmds.connectAttr('{}.outputX'.format(rotInput), '{}.rotateX'.format(rotGrp))
     cmds.connectAttr('{}.outputX'.format(cogConversion), '{}.input2X'.format(rotCalc))
     cmds.connectAttr('{}.outColorR'.format(override), '{}.input2X'.format(rotInvert))
+    cmds.connectAttr('{}.translate'.format(gearOffset), '{}.translate'.format(gearGrp))
+    cmds.connectAttr('{}.rotate'.format(gearOffset), '{}.rotate'.format(gearGrp))
     
 
     if x != 1:
@@ -157,6 +164,20 @@ for x in range(1, gearAmount + 1):
     lastOverride = override
     
 #organizing the end result
-cmds.group(grps, n = 'gear rig')
+
+
+controlGrp.append(rotCon)
+controlGrp.append(cmds.group(offsetGrp, n = 'offset controls'))
+masterGrp.append(cmds.group(controlGrp, n = 'controls'))
+masterGrp.append(cmds.group(geometryGrp, n = 'geometry'))
+
+cmds.group(masterGrp, n = 'gear rig')
+
+'''
+controlGrp = []
+offsetGrp = []
+geometryGrp = []
+masterGrp = []
+'''
     
 endMessage()
