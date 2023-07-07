@@ -145,6 +145,7 @@ if gearGeo == []:
         cmds.select(d = True)
         gearGeo.append(gear)
         gearPos[gearGeo[i]] = [0.0, 0.0, tempGearOffset]
+        gearRot[gearGeo[i]] = [0.0, 0.0, 0.0]
         tempGearOffset = tempGearOffset + tempGearOffsetDistance
 
 else:
