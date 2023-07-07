@@ -13,7 +13,8 @@ add attribute to change how far out from the gear the offset control is
 set control to go to first gear (or be moved by animator? but default is by first gear))
 if gears are zeroed out the offset control will not be in the right place. Gear rotation still works as intended
 add attr to control offset control visibility
-lock attributes
+lock attributes (can use 'l = True' in all the setAttr lines)
+change color of cons! (with variables to easily change later)
 
 '''
 
@@ -49,16 +50,75 @@ def endMessage():
     print('MeerKate.com')
     print('-----------------------------------------------')
 
-def createCon(): # function that creates the control (replace later with arrow control)
-    # creates the control
+def createCon(): # function that creates the control
     print('Creating gear control')
-    con = cmds.circle(n = 'gearRotate_CON', d = 3, s = 8, nr = (1, 0, 0), cx = 1, r = 1.5, ch = False)[0]
+    # define names
+    circleNames = ['innCircleLf', 'outCircleLf', 'innCircleRt', 'outCircleRt']
+    arrowNames = ['arrowLf', 'arrowRt', 'arrowUp', 'arrowDn']
+    conName = 'gearRotate_CON'
+
+    # create arrow components
+    circles = []
+    arrows = []
+    circles.append(cmds.circle(n = circleNames[0], c = (0, 0, 0), nr = (0, 1, 0), r = 1.35, sw = 90, ch = False)[0])
+    circles.append(cmds.circle(n = circleNames[1], c = (0, 0, 0), nr = (0, 1, 0), r = 1.65, sw = 90, ch = False)[0])
+    circles.append(cmds.circle(n = circleNames[2], c = (0, 0, 0), nr = (0, 1, 0), r = 1.35, sw = 90, ch = False)[0])
+    cmds.rotate(0, 180, 0, circles[2])
+    circles.append(cmds.circle(n = circleNames[3], c = (0, 0, 0), nr = (0, 1, 0), r = 1.65, sw = 90, ch = False)[0])
+    cmds.rotate(0, 180, 0, circles[3])
+
+    arrows.append(cmds.curve(n = arrowNames[0], p = [(0.15, 0, 0), (0.4, 0, -0.04), (0.55, 0, -0.0625),  (0.48, 0, 0.1), (0.1, 0, 0.45), (0, 0, .5), (-0.1, 0, 0.45), (-0.48, 0, 0.1), (-0.55, 0, -0.0625), (-0.4, 0, -0.04), (-0.15, 0, 0)]))
+    cmds.move (-1.5, 0, 0, arrows[0])
+
+    arrows.append(cmds.curve(n = arrowNames[1], p = [(0.15, 0, 0), (0.4, 0, -0.04), (0.55, 0, -0.0625),  (0.48, 0, 0.1), (0.1, 0, 0.45), (0, 0, .5), (-0.1, 0, 0.45), (-0.48, 0, 0.1), (-0.55, 0, -0.0625), (-0.4, 0, -0.04), (-0.15, 0, 0)]))
+    cmds.move (1.5, 0, 0, arrows[1])
+    cmds.rotate (0, 180, 0, arrows[1])
+
+    arrows.append(cmds.curve(n = arrowNames[2], p = [(0.15, 0, 0), (0.4, 0, -0.04), (0.55, 0, -0.0625),  (0.48, 0, 0.1), (0.1, 0, 0.45), (0, 0, .5), (-0.1, 0, 0.45), (-0.48, 0, 0.1), (-0.55, 0, -0.0625), (-0.4, 0, -0.04), (-0.15, 0, 0)]))
+    cmds.move (0, 0, -1.5, arrows[2])
+    cmds.rotate (0, 90, 0, arrows[2])
+
+    arrows.append(cmds.curve(n = arrowNames[3], p = [(0.15, 0, 0), (0.4, 0, -0.04), (0.55, 0, -0.0625),  (0.48, 0, 0.1), (0.1, 0, 0.45), (0, 0, .5), (-0.1, 0, 0.45), (-0.48, 0, 0.1), (-0.55, 0, -0.0625), (-0.4, 0, -0.04), (-0.15, 0, 0)]))
+    cmds.move (0, 0, 1.5, arrows[3])
+    cmds.rotate (0, -90, 0, arrows[3])
+
+    #freeze transformations
+    for each in circles:
+        cmds.makeIdentity(each, a = True, t = True, r = True, s = True, n = False)
+    for each in arrows:
+        cmds.makeIdentity(each, a = True, t = True, r = True, s = True, n = False)
+
+    #select and combine all shapes
+    cmds.select(d = True)
+    con = cmds.group(n = conName, em = True)
+    cmds.select(circles, arrows)
+    '''for each in circles:
+        cmds.select(each, add = True)
+    for each in arrows:
+        cmds.select(each, add = True)'''
+    cmds.pickWalk(d = 'down')
+        
+    cmds.select(con, add = True)
+    cmds.parent(r = True, s = True,)
+
+    #select and delete all empty nodes
+    cmds.select(d = True)
+    for each in circles:
+        cmds.select(each, add = True)
+    for each in arrows:
+        cmds.select(each, add = True)
+    cmds.delete()
+    
+    # rotate control and freeze transformations
+    cmds.xform(con, ro = (0, 0, 90), t = (1,0,0))
+    cmds.makeIdentity(con, a = True, t = True, r = True, s = True, n = False)
 
     # add attributes to control
-    cmds.select(con, r = True)
-    cmds.addAttr(ln = 'rotMult', at = 'float', dv = 1, h = False, k = True)
+    cmds.addAttr(con, ln = 'rotMult', at = 'float', dv = 1, h = False, k = True)
+    cmds.addAttr(con, ln = 'offsetConVis', at = 'bool', dv = 1, h = False, k = True)
     conOutput = cmds.createNode('multiplyDivide', n = ("conMultiplier"))
-    cmds.connectAttr('gearRotate_CON.rotateX', '{}.input1X'.format(conOutput))
+    cmds.connectAttr('{}.rotateX'.format(con), '{}.input1X'.format(conOutput))
+    
     return [con, conOutput]
 
 introduction()
@@ -146,13 +206,18 @@ for x in range(1, gearAmount + 1):
     cmds.connectAttr('{}.outputX'.format(cogConversion), '{}.input2X'.format(rotCalc))
     cmds.connectAttr('{}.outColorR'.format(override), '{}.input2X'.format(rotInvert))
     cmds.connectAttr('{}.translate'.format(gearOffset), '{}.translate'.format(gearGrp))
-    cmds.connectAttr('{}.rotate'.format(gearOffset), '{}.rotate'.format(gearGrp))
-    
+    cmds.connectAttr('{}.rotate'.format(gearOffset), '{}.rotate'.format(gearGrp))    
 
     if x != 1:
         # connects nodes from the last gear to the current gear's nodes
         cmds.connectAttr('{}.gearCogs'.format(gearOffset), '{}.input2X'.format(lastCogConversion))
         cmds.connectAttr('{}.directionOverride'.format(gearOffset), '{}.firstTerm'.format(lastOverride))
+    else:
+        # set gear rotate con to follow first offset con
+        conGrp = cmds.group(rotCon, n = 'gearRotateGrp')
+        print(conGrp)
+        cmds.connectAttr('{}.translate'.format(gearOffset), '{}.translate'.format(conGrp))
+        cmds.connectAttr('{}.rotate'.format(gearOffset), '{}.rotate'.format(conGrp))
 
     # moves the gear back to assigned offset position
     cmds.xform(gearOffset, t = gearPos[gearGeo[x-1]], ro = gearRot[gearGeo[x-1]], ws = True)
@@ -164,14 +229,16 @@ for x in range(1, gearAmount + 1):
     lastOverride = override
     
 #organizing the end result
-
-
-controlGrp.append(rotCon)
-controlGrp.append(cmds.group(offsetGrp, n = 'offset controls'))
+controlGrp.append(conGrp)
+offsetConVis = cmds.group(offsetGrp, n = 'offset controls')
+controlGrp.append(offsetConVis)
 masterGrp.append(cmds.group(controlGrp, n = 'controls'))
 masterGrp.append(cmds.group(geometryGrp, n = 'geometry'))
 
 cmds.group(masterGrp, n = 'gear rig')
+
+# last minute attribute hook-ups
+cmds.connectAttr('{}.offsetConVis'.format(rotCon), '{}.visibility'.format(offsetConVis), l = True)
 
 '''
 controlGrp = []
