@@ -1,21 +1,22 @@
 ''' TO DO:
-rotate stuff so the front is the front view 
-maybe parent the main gear group to gear offset and pull the offset con out of hiarchy for easier animator use?
+rotate stuff so the front is the front view? 
 What does it do if there's only 1 gear? What do I want it to do?
-Add a variable to change scale of controls
-should get rotation and scale(?) of gears too
-should lock pos neg and maybe even hide it?
 if UI popups are an option then make the temp gears number pop up as a prompt
 make loops consistant (x+1 vs x)
-save each main group and parent them all into a single group
 currently breaks if you try and do it mutltiple times in same scene
-add attribute to change how far out from the gear the offset control is
-set control to go to first gear (or be moved by animator? but default is by first gear))
 if gears are zeroed out the offset control will not be in the right place. Gear rotation still works as intended
-add attr to control offset control visibility
 lock attributes (can use 'l = True' in all the setAttr lines)
 change color of cons! (with variables to easily change later)
 add variable that defines front direction of gears while zeroed out and automatically adjusts rotate
+
+'''
+
+''' How to use:
+Arrange your gears' position and rotation
+Select your gears in order
+Run program
+
+
 
 '''
 
@@ -116,7 +117,7 @@ def createCon(): # function that creates the control
     # transform control and freeze transformations
     conScale = conSizeRot / 4
     print('con name: ' + str(con))
-    cmds.xform(con, ro = (0, 0, -90), s = (conScale, conScale, conScale))
+    cmds.xform(con, ro = (0, 0, -90), s = (conScale, 1, conScale))
     cmds.makeIdentity(con, a = True, t = True, r = True, s = True, n = False)
 
     # add attributes to control
@@ -184,7 +185,7 @@ for x in range(1, gearAmount + 1):
     gearGrp = cmds.group(rotGrp, n = 'gear{}'.format(x))
     geometryGrp.append(gearGrp)
     
-    gearOffset = cmds.circle(n = 'gearOffset{}'.format(x), r = (conSizeOffset / 2), d = 1, s = 4, nr = (1, 0, 0), cx = 1, ch = False)[0]
+    gearOffset = cmds.circle(n = 'gearOffset{}'.format(x), r = (conSizeOffset / 2), d = 1, s = 4, nr = (1, 0, 0), cx = conDis, ch = False)[0]
     cmds.addAttr(gearOffset, at = 'long', longName = 'gearCogs', defaultValue = 10, minValue = 2, h = False, k = True)
     cmds.addAttr(gearOffset, at = 'bool', longName = 'directionOverride', defaultValue = False, h = False, k = True)
     offsetGrp.append(gearOffset)
