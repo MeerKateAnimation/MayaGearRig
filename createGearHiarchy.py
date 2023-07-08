@@ -15,6 +15,7 @@ if gears are zeroed out the offset control will not be in the right place. Gear 
 add attr to control offset control visibility
 lock attributes (can use 'l = True' in all the setAttr lines)
 change color of cons! (with variables to easily change later)
+add variable that defines front direction of gears while zeroed out and automatically adjusts rotate
 
 '''
 
@@ -25,6 +26,7 @@ changeable attributes (some only apply if nothing is selected)
 conSizeRot = 4 # changes the size of the main rotation control (currently does nothing)
 conSizeOffset = 1.5 # changes the size of the offset control
 controlFollowsGear = True # determines if gear spin control follows first gear offset control
+conDis = 1 # distance the controls are from gears' pivots
 
 # These only apply if nothing is selected
 gearAmount = 10 # sets default gear amount if nothing is selected
@@ -81,6 +83,8 @@ def createCon(): # function that creates the control
     arrows.append(cmds.curve(n = arrowNames[3], p = [(0.15, 0, 0), (0.4, 0, -0.04), (0.55, 0, -0.0625),  (0.48, 0, 0.1), (0.1, 0, 0.45), (0, 0, .5), (-0.1, 0, 0.45), (-0.48, 0, 0.1), (-0.55, 0, -0.0625), (-0.4, 0, -0.04), (-0.15, 0, 0)]))
     cmds.move (0, 0, 1.5, arrows[3])
     cmds.rotate (0, -90, 0, arrows[3])
+    
+    cmds.move(0, conDis, 0, circles, arrows, r = True)
 
     #freeze transformations
     for each in circles:
@@ -111,7 +115,8 @@ def createCon(): # function that creates the control
     
     # transform control and freeze transformations
     conScale = conSizeRot / 4
-    cmds.xform(con, ro = (0, 0, 90), t = (1,0,0), s = (conScale, conScale, conScale))
+    print('con name: ' + str(con))
+    cmds.xform(con, ro = (0, 0, -90), s = (conScale, conScale, conScale))
     cmds.makeIdentity(con, a = True, t = True, r = True, s = True, n = False)
 
     # add attributes to control
@@ -217,7 +222,9 @@ for x in range(1, gearAmount + 1):
         cmds.connectAttr('{}.directionOverride'.format(gearOffset), '{}.firstTerm'.format(lastOverride))
     else:
         # set gear rotate con to follow first offset con
-        conGrp = cmds.group(rotCon, n = 'gearRotateGrp')
+        conGrp = cmds.group(n = 'gearRotateGrp', em = True)
+        cmds.parent(rotCon,conGrp)
+        #cmds.move(conGrp, x = -1, pgp = True)
         print(conGrp)
         cmds.connectAttr('{}.translate'.format(gearOffset), '{}.translate'.format(conGrp))
         cmds.connectAttr('{}.rotate'.format(gearOffset), '{}.rotate'.format(conGrp))
