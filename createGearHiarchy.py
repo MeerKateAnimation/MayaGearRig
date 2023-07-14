@@ -6,8 +6,8 @@ make loops consistant (x+1 vs x)
 currently breaks if you try and do it mutltiple times in same scene
 if gears are zeroed out the offset control will not be in the right place. Gear rotation still works as intended
 lock attributes (can use 'l = True' in all the setAttr lines)
-change color of cons! (with variables to easily change later)
 add variable that defines front direction of gears while zeroed out and automatically adjusts rotate
+attr to change default gear cog number?
 
 '''
 
@@ -15,8 +15,6 @@ add variable that defines front direction of gears while zeroed out and automati
 Arrange your gears' position and rotation
 Select your gears in order
 Run program
-
-
 
 '''
 
@@ -28,6 +26,8 @@ conSizeRot = 4 # changes the size of the main rotation control (currently does n
 conSizeOffset = 1.5 # changes the size of the offset control
 controlFollowsGear = True # determines if gear spin control follows first gear offset control
 conDis = 1 # distance the controls are from gears' pivots
+conOffsetColor = 20 # index color of offset controls
+conRotColor = 17 # index color of rotation control
 
 # These only apply if nothing is selected
 gearAmount = 10 # sets default gear amount if nothing is selected
@@ -93,18 +93,21 @@ def createCon(): # function that creates the control
     for each in arrows:
         cmds.makeIdentity(each, a = True, t = True, r = True, s = True, n = False)
 
+
     #select and combine all shapes
     cmds.select(d = True)
     con = cmds.group(n = conName, em = True)
     cmds.select(circles, arrows)
-    '''for each in circles:
-        cmds.select(each, add = True)
-    for each in arrows:
-        cmds.select(each, add = True)'''
     cmds.pickWalk(d = 'down')
+    
+    rotConShapes = cmds.ls(sl = True) # saves shapes for changing the control color
         
     cmds.select(con, add = True)
     cmds.parent(r = True, s = True,)
+    
+    for each in rotConShapes:
+        cmds.setAttr('{}.overrideEnabled'.format(each), 1)
+        cmds.setAttr('{}.overrideColor'.format(each), conRotColor)
 
     #select and delete all empty nodes
     cmds.select(d = True)
@@ -188,6 +191,8 @@ for x in range(1, gearAmount + 1):
     gearOffset = cmds.circle(n = 'gearOffset{}'.format(x), r = (conSizeOffset / 2), d = 1, s = 4, nr = (1, 0, 0), cx = conDis, ch = False)[0]
     cmds.addAttr(gearOffset, at = 'long', longName = 'gearCogs', defaultValue = 10, minValue = 2, h = False, k = True)
     cmds.addAttr(gearOffset, at = 'bool', longName = 'directionOverride', defaultValue = False, h = False, k = True)
+    cmds.setAttr('{}.overrideEnabled'.format(gearOffset), 1)
+    cmds.setAttr('{}.overrideColor'.format(gearOffset), conOffsetColor)
     offsetGrp.append(gearOffset)
     
     # create node to calculate rotation ratio
@@ -225,7 +230,6 @@ for x in range(1, gearAmount + 1):
         # set gear rotate con to follow first offset con
         conGrp = cmds.group(n = 'gearRotateGrp', em = True)
         cmds.parent(rotCon,conGrp)
-        #cmds.move(conGrp, x = -1, pgp = True)
         print(conGrp)
         cmds.connectAttr('{}.translate'.format(gearOffset), '{}.translate'.format(conGrp))
         cmds.connectAttr('{}.rotate'.format(gearOffset), '{}.rotate'.format(conGrp))
@@ -251,11 +255,6 @@ cmds.group(masterGrp, n = 'gear rig')
 # last minute attribute hook-ups
 cmds.connectAttr('{}.offsetConVis'.format(rotCon), '{}.visibility'.format(offsetConVis), l = True)
 
-'''
-controlGrp = []
-offsetGrp = []
-geometryGrp = []
-masterGrp = []
-'''
+cmds.select(d = True)
     
 endMessage()
